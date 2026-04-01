@@ -45,7 +45,7 @@
                     Upload Photo
                 </button>
                 @if($user->avatar)
-                <button class="btn-avatar-remove" onclick="removeAvatar()">Remove</button>
+                <button class="btn-avatar-remove" id="btnAvatarRemove" onclick="removeAvatar()">Remove</button>
                 @endif
             </div>
 
@@ -92,7 +92,6 @@
             <div class="section-title-row">
                 <h3 class="profile-section-title">Personal Information</h3>
             </div>
-
             <div class="profile-form" id="profileForm">
                 <div class="form-grid-2">
                     <div class="form-group">
@@ -189,7 +188,7 @@
 <script>
 const CSRF = document.querySelector('meta[name="csrf-token"]').content;
 
-// ---- TOASTER (same as create page) ----
+// ---- TOASTER ----
 function showToast(msg, type = 'success') {
     const container = document.getElementById('toastContainer');
     const toast = document.createElement('div');
@@ -214,14 +213,11 @@ function uploadAvatar(input) {
         showToast('File too large. Max 2MB.', 'error'); return;
     }
 
-    // Preview immediately
+    // Instant local preview
     const reader = new FileReader();
-    reader.onload = e => {
-        document.getElementById('avatarImg').src = e.target.result;
-    };
+    reader.onload = e => { document.getElementById('avatarImg').src = e.target.result; };
     reader.readAsDataURL(file);
 
-    // Show progress bar
     const progress = document.getElementById('uploadProgress');
     const bar      = document.getElementById('uploadBar');
     progress.style.display = 'block';
@@ -239,7 +235,15 @@ function uploadAvatar(input) {
         progress.style.display = 'none';
         const data = JSON.parse(xhr.responseText);
         if (data.success) {
-            document.getElementById('avatarImg').src = data.avatar_url + '?t=' + Date.now();
+            // Use the URL returned by the server — it has the correct /public/ prefix
+            const newUrl = data.avatar_url + '?t=' + Date.now();
+            document.getElementById('avatarImg').src = newUrl;
+            // Sync navbar avatar too
+            const navAvatar = document.getElementById('navAvatarImg');
+            if (navAvatar) navAvatar.src = newUrl;
+            // Show Remove button
+            const removeBtn = document.getElementById('btnAvatarRemove');
+            if (removeBtn) removeBtn.style.display = '';
             showToast(data.message, 'success');
         } else {
             showToast(data.message ?? 'Upload failed.', 'error');
@@ -264,9 +268,13 @@ function removeAvatar() {
     .then(r => r.json())
     .then(data => {
         if (data.success) {
-            // Reset to initials avatar
-            const name = encodeURIComponent(document.getElementById('displayName').textContent.trim());
-            document.getElementById('avatarImg').src = `https://ui-avatars.com/api/?name=${name}&background=6c8fff&color=fff&size=128&bold=true&font-size=0.4`;
+            // Server returns the correct initials avatar URL (right color, no broken path)
+            document.getElementById('avatarImg').src = data.avatar_url;
+            const navAvatar = document.getElementById('navAvatarImg');
+            if (navAvatar) navAvatar.src = data.avatar_url;
+            // Hide Remove button
+            const removeBtn = document.getElementById('btnAvatarRemove');
+            if (removeBtn) removeBtn.style.display = 'none';
             showToast(data.message, 'success');
         }
     })
@@ -292,9 +300,11 @@ function saveProfile() {
     .then(r => r.json())
     .then(data => {
         if (data.success) {
-            // Update display name + job in sidebar
             document.getElementById('displayName').textContent = document.getElementById('pName').value;
             document.getElementById('displayJob').textContent  = document.getElementById('pJobTitle').value || 'No title set';
+            // Sync navbar name
+            const navName = document.querySelector('.nav-avatar-name');
+            if (navName) navName.textContent = document.getElementById('pName').value.split(' ')[0];
             showToast(data.message, 'success');
         } else {
             showToast(data.message ?? 'Update failed.', 'error');
@@ -314,9 +324,9 @@ function changePassword() {
     if (newPw !== confirmPw) { showToast('Passwords do not match.', 'error'); return; }
 
     const body = new URLSearchParams({
-        _token:               CSRF,
-        current_password:     currentPw,
-        password:             newPw,
+        _token:                CSRF,
+        current_password:      currentPw,
+        password:              newPw,
         password_confirmation: confirmPw,
     });
 
@@ -350,23 +360,20 @@ function checkPwStrength(val) {
     const bar   = document.getElementById('pwStrengthBar');
     const label = document.getElementById('pwStrengthLabel');
     const wrap  = document.getElementById('pwStrength');
-
     if (!val) { wrap.style.display = 'none'; return; }
     wrap.style.display = 'flex';
-
     let score = 0;
-    if (val.length >= 8)            score++;
-    if (val.length >= 12)           score++;
-    if (/[A-Z]/.test(val))          score++;
-    if (/[0-9]/.test(val))          score++;
-    if (/[^A-Za-z0-9]/.test(val))   score++;
-
+    if (val.length >= 8)           score++;
+    if (val.length >= 12)          score++;
+    if (/[A-Z]/.test(val))         score++;
+    if (/[0-9]/.test(val))         score++;
+    if (/[^A-Za-z0-9]/.test(val))  score++;
     const levels = [
         { pct: '20%', color: '#ff5f5f', text: 'Very weak' },
         { pct: '40%', color: '#f5a623', text: 'Weak' },
         { pct: '60%', color: '#f5a623', text: 'Fair' },
         { pct: '80%', color: '#43c678', text: 'Strong' },
-        { pct: '100%', color: '#43c678', text: 'Very strong' },
+        { pct: '100%',color: '#43c678', text: 'Very strong' },
     ];
     const lvl = levels[score - 1] || levels[0];
     bar.style.width = lvl.pct;
@@ -398,155 +405,56 @@ function confirmDeleteLogs() {
 
 <style>
 /* ---- PROFILE LAYOUT ---- */
-.profile-layout {
-    display: grid;
-    grid-template-columns: 280px 1fr;
-    gap: 1.5rem;
-    align-items: start;
-}
+.profile-layout { display:grid; grid-template-columns:280px 1fr; gap:1.5rem; align-items:start; }
 @media (max-width: 860px) { .profile-layout { grid-template-columns: 1fr; } }
-
-/* ---- SIDEBAR ---- */
-.profile-sidebar { display: flex; flex-direction: column; gap: 1rem; }
-
-.avatar-card { text-align: center; }
-
-.avatar-wrap {
-    position: relative;
-    width: 110px; height: 110px;
-    margin: 0 auto 1.25rem;
-    border-radius: 50%;
-    overflow: hidden;
-    cursor: pointer;
-    border: 3px solid var(--border-2);
-    transition: border-color 0.2s;
-}
-.avatar-wrap:hover { border-color: var(--accent); }
-.avatar-img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.avatar-overlay {
-    position: absolute; inset: 0;
-    background: rgba(0,0,0,0.55);
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    gap: 0.25rem;
-    opacity: 0; transition: opacity 0.2s;
-}
-.avatar-wrap:hover .avatar-overlay { opacity: 1; }
-.avatar-overlay-icon { font-size: 1.4rem; }
-.avatar-overlay-text { font-size: 0.72rem; color: #fff; font-weight: 600; letter-spacing: 0.04em; }
-
-.avatar-info { margin-bottom: 1rem; }
-.avatar-name { font-family: var(--font-display); font-size: 1.05rem; font-weight: 700; margin-bottom: 0.2rem; }
-.avatar-job  { font-size: 0.8rem; color: var(--accent); margin-bottom: 0.25rem; }
-.avatar-email { font-size: 0.75rem; color: var(--text-3); }
-
-.avatar-actions { display: flex; gap: 0.5rem; justify-content: center; margin-bottom: 0.5rem; flex-wrap: wrap; }
-.btn-avatar-upload {
-    background: var(--accent-glow); color: var(--accent);
-    border: 1px solid rgba(108,143,255,0.3); border-radius: 8px;
-    padding: 0.4rem 0.875rem; font-size: 0.8rem;
-    font-family: var(--font-body); cursor: pointer;
-    transition: all 0.15s;
-}
-.btn-avatar-upload:hover { background: var(--accent); color: #fff; }
-.btn-avatar-remove {
-    background: var(--red-dim); color: var(--red);
-    border: 1px solid rgba(255,95,95,0.3); border-radius: 8px;
-    padding: 0.4rem 0.875rem; font-size: 0.8rem;
-    font-family: var(--font-body); cursor: pointer;
-    transition: all 0.15s;
-}
-.btn-avatar-remove:hover { background: var(--red); color: #fff; }
-.avatar-hint { font-size: 0.72rem; color: var(--text-3); margin-top: 0.25rem; }
-
-.avatar-upload-progress {
-    margin-top: 0.75rem; background: var(--bg-3);
-    border-radius: 4px; height: 4px; overflow: hidden;
-}
-.upload-bar {
-    height: 100%; background: var(--accent);
-    border-radius: 4px; width: 0%;
-    transition: width 0.2s ease;
-}
-
-/* Stats sidebar */
+.profile-sidebar { display:flex; flex-direction:column; gap:1rem; }
+.avatar-card { text-align:center; }
+.avatar-wrap { position:relative; width:110px; height:110px; margin:0 auto 1.25rem; border-radius:50%; overflow:hidden; cursor:pointer; border:3px solid var(--border-2); transition:border-color 0.2s; }
+.avatar-wrap:hover { border-color:var(--accent); }
+.avatar-img { width:100%; height:100%; object-fit:cover; display:block; }
+.avatar-overlay { position:absolute; inset:0; background:rgba(0,0,0,0.55); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:0.25rem; opacity:0; transition:opacity 0.2s; }
+.avatar-wrap:hover .avatar-overlay { opacity:1; }
+.avatar-overlay-icon { font-size:1.4rem; }
+.avatar-overlay-text { font-size:0.72rem; color:#fff; font-weight:600; letter-spacing:0.04em; }
+.avatar-info { margin-bottom:1rem; }
+.avatar-name { font-family:var(--font-display); font-size:1.05rem; font-weight:700; margin-bottom:0.2rem; }
+.avatar-job  { font-size:0.8rem; color:var(--accent); margin-bottom:0.25rem; }
+.avatar-email { font-size:0.75rem; color:var(--text-3); }
+.avatar-actions { display:flex; gap:0.5rem; justify-content:center; margin-bottom:0.5rem; flex-wrap:wrap; }
+.btn-avatar-upload { background:var(--accent-glow); color:var(--accent); border:1px solid rgba(108,143,255,0.3); border-radius:8px; padding:0.4rem 0.875rem; font-size:0.8rem; font-family:var(--font-body); cursor:pointer; transition:all 0.15s; }
+.btn-avatar-upload:hover { background:var(--accent); color:#fff; }
+.btn-avatar-remove { background:var(--red-dim); color:var(--red); border:1px solid rgba(255,95,95,0.3); border-radius:8px; padding:0.4rem 0.875rem; font-size:0.8rem; font-family:var(--font-body); cursor:pointer; transition:all 0.15s; }
+.btn-avatar-remove:hover { background:var(--red); color:#fff; }
+.avatar-hint { font-size:0.72rem; color:var(--text-3); margin-top:0.25rem; }
+.avatar-upload-progress { margin-top:0.75rem; background:var(--bg-3); border-radius:4px; height:4px; overflow:hidden; }
+.upload-bar { height:100%; background:var(--accent); border-radius:4px; width:0%; transition:width 0.2s ease; }
 .stats-sidebar-card {}
-.sidebar-section-title {
-    font-family: var(--font-display); font-size: 0.8rem;
-    font-weight: 600; color: var(--text-2);
-    text-transform: uppercase; letter-spacing: 0.06em;
-    margin-bottom: 1rem;
-}
-.sidebar-stats {
-    display: grid; grid-template-columns: 1fr 1fr;
-    gap: 0.75rem; margin-bottom: 1rem;
-}
-.sidebar-stat {
-    background: var(--bg-3); border: 1px solid var(--border);
-    border-radius: var(--radius); padding: 0.75rem;
-    display: flex; flex-direction: column; align-items: center; gap: 0.2rem;
-}
-.sidebar-stat-num {
-    font-family: var(--font-display); font-size: 1.4rem;
-    font-weight: 800; color: var(--accent);
-}
-.sidebar-stat-label { font-size: 0.7rem; color: var(--text-3); text-align: center; }
-.member-since {
-    font-size: 0.75rem; color: var(--text-3);
-    text-align: center; padding-top: 0.75rem;
-    border-top: 1px solid var(--border);
-}
-
-/* ---- PROFILE MAIN ---- */
-.profile-main { display: flex; flex-direction: column; gap: 1.25rem; }
-.profile-section {}
-.section-title-row {
-    display: flex; align-items: center; justify-content: space-between;
-    margin-bottom: 1.5rem;
-    padding-bottom: 0.875rem;
-    border-bottom: 1px solid var(--border);
-}
-.profile-section-title {
-    font-family: var(--font-display); font-size: 1rem; font-weight: 700;
-}
-.profile-form { display: flex; flex-direction: column; gap: 1rem; }
-.form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.sidebar-section-title { font-family:var(--font-display); font-size:0.8rem; font-weight:600; color:var(--text-2); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:1rem; }
+.sidebar-stats { display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-bottom:1rem; }
+.sidebar-stat { background:var(--bg-3); border:1px solid var(--border); border-radius:var(--radius); padding:0.75rem; display:flex; flex-direction:column; align-items:center; gap:0.2rem; }
+.sidebar-stat-num { font-family:var(--font-display); font-size:1.4rem; font-weight:800; color:var(--accent); }
+.sidebar-stat-label { font-size:0.7rem; color:var(--text-3); text-align:center; }
+.member-since { font-size:0.75rem; color:var(--text-3); text-align:center; padding-top:0.75rem; border-top:1px solid var(--border); }
+.profile-main { display:flex; flex-direction:column; gap:1.25rem; }
+.section-title-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:1.5rem; padding-bottom:0.875rem; border-bottom:1px solid var(--border); }
+.profile-section-title { font-family:var(--font-display); font-size:1rem; font-weight:700; }
+.profile-form { display:flex; flex-direction:column; gap:1rem; }
+.form-grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
 @media (max-width: 600px) { .form-grid-2 { grid-template-columns: 1fr; } }
-.form-hint { font-size: 0.75rem; color: var(--text-3); font-weight: 400; margin-left: 0.5rem; }
-.form-textarea {
-    resize: vertical; min-height: 90px;
-    line-height: 1.6; padding-top: 0.65rem;
-}
-.char-count { font-size: 0.72rem; color: var(--text-3); text-align: right; margin-top: -0.5rem; }
-.form-actions { display: flex; justify-content: flex-end; padding-top: 0.5rem; }
-
-/* Password */
-.password-wrap { position: relative; }
-.pw-toggle {
-    position: absolute; right: 0.75rem; top: 50%; transform: translateY(-50%);
-    background: none; border: none; cursor: pointer; font-size: 1rem;
-    color: var(--text-3); padding: 0; line-height: 1;
-    transition: color 0.15s;
-}
-.pw-toggle:hover { color: var(--text); }
-.pw-strength {
-    display: flex; align-items: center; gap: 0.6rem;
-    margin-top: 0.4rem;
-}
-.pw-strength-bar {
-    flex: 1; height: 3px; border-radius: 2px;
-    background: var(--red); transition: width 0.3s, background 0.3s;
-}
-.pw-strength-label { font-size: 0.72rem; white-space: nowrap; font-weight: 500; }
-
-/* Danger Zone */
-.danger-zone { border-color: rgba(255,95,95,0.25) !important; }
-.danger-title { color: var(--red); margin-bottom: 1rem; }
-.danger-row {
-    display: flex; align-items: center; justify-content: space-between;
-    gap: 1.5rem; flex-wrap: wrap;
-}
-.danger-label { font-size: 0.9rem; font-weight: 600; color: var(--text); margin-bottom: 0.2rem; }
-.danger-desc  { font-size: 0.8rem; color: var(--text-3); }
+.form-hint { font-size:0.75rem; color:var(--text-3); font-weight:400; margin-left:0.5rem; }
+.form-textarea { resize:vertical; min-height:90px; line-height:1.6; padding-top:0.65rem; }
+.char-count { font-size:0.72rem; color:var(--text-3); text-align:right; margin-top:-0.5rem; }
+.form-actions { display:flex; justify-content:flex-end; padding-top:0.5rem; }
+.password-wrap { position:relative; }
+.pw-toggle { position:absolute; right:0.75rem; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; font-size:1rem; color:var(--text-3); padding:0; line-height:1; transition:color 0.15s; }
+.pw-toggle:hover { color:var(--text); }
+.pw-strength { display:flex; align-items:center; gap:0.6rem; margin-top:0.4rem; }
+.pw-strength-bar { flex:1; height:3px; border-radius:2px; background:var(--red); transition:width 0.3s, background 0.3s; }
+.pw-strength-label { font-size:0.72rem; white-space:nowrap; font-weight:500; }
+.danger-zone { border-color:rgba(255,95,95,0.25) !important; }
+.danger-title { color:var(--red); margin-bottom:1rem; }
+.danger-row { display:flex; align-items:center; justify-content:space-between; gap:1.5rem; flex-wrap:wrap; }
+.danger-label { font-size:0.9rem; font-weight:600; color:var(--text); margin-bottom:0.2rem; }
+.danger-desc  { font-size:0.8rem; color:var(--text-3); }
 </style>
 @endsection

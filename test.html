@@ -1,0 +1,1266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DreamZone - Your Path to Better Sleep</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-dark: #0a0a1a;
+            --primary-blue: #1a1a3e;
+            --accent-purple: #6c5ce7;
+            --accent-blue: #a29bfe;
+            --accent-pink: #fd79a8;
+            --text-light: #f8f8f8;
+            --text-muted: #b8b8d1;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-blue) 100%);
+            color: var(--text-light);
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* Animated Stars Background */
+        #stars-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle var(--duration) ease-in-out infinite;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .star:hover {
+            transform: scale(1.5);
+        }
+
+        .star.clicked {
+            animation: starBurst 0.5s ease-out forwards;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+
+        @keyframes starBurst {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(2); opacity: 0.8; }
+            100% { transform: scale(0); opacity: 0; }
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 1.5rem 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+            background: rgba(10, 10, 26, 0.8);
+        }
+
+        .logo {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-pink));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2.5rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+            position: relative;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--accent-purple);
+            transition: width 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: var(--text-light);
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        .nav-cta {
+            padding: 0.75rem 1.5rem;
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink));
+            border: none;
+            border-radius: 30px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .nav-cta:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(108, 92, 231, 0.4);
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            padding: 0 5%;
+            z-index: 1;
+        }
+
+        .hero-content {
+            max-width: 800px;
+            text-align: center;
+        }
+
+        .hero-badge {
+            display: inline-block;
+            padding: 0.5rem 1.5rem;
+            background: rgba(108, 92, 231, 0.2);
+            border: 1px solid var(--accent-purple);
+            border-radius: 30px;
+            font-size: 0.9rem;
+            margin-bottom: 2rem;
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        .hero h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(2.5rem, 6vw, 4.5rem);
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: 1.5rem;
+            animation: fadeInUp 0.8s ease-out 0.2s both;
+        }
+
+        .hero h1 span {
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-pink));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            line-height: 1.8;
+            margin-bottom: 2.5rem;
+            animation: fadeInUp 0.8s ease-out 0.4s both;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            animation: fadeInUp 0.8s ease-out 0.6s both;
+        }
+
+        .btn-primary {
+            padding: 1rem 2.5rem;
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink));
+            border: none;
+            border-radius: 50px;
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(108, 92, 231, 0.5);
+        }
+
+        .btn-secondary {
+            padding: 1rem 2.5rem;
+            background: transparent;
+            border: 2px solid var(--accent-purple);
+            border-radius: 50px;
+            color: var(--text-light);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary:hover {
+            background: var(--accent-purple);
+            transform: translateY(-3px);
+        }
+
+        /* Floating Moon */
+        .moon {
+            position: absolute;
+            top: 15%;
+            right: 10%;
+            width: 150px;
+            height: 150px;
+            background: linear-gradient(135deg, #ffeaa7, #fdcb6e);
+            border-radius: 50%;
+            box-shadow: 
+                0 0 60px rgba(253, 203, 110, 0.5),
+                0 0 100px rgba(253, 203, 110, 0.3),
+                inset -20px -20px 40px rgba(0,0,0,0.1);
+            animation: float 6s ease-in-out infinite;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .moon:hover {
+            transform: scale(1.1);
+        }
+
+        .moon-crater {
+            position: absolute;
+            background: rgba(0,0,0,0.1);
+            border-radius: 50%;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(5deg); }
+        }
+
+        /* Scroll Indicator */
+        .scroll-indicator {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            animation: bounce 2s infinite;
+        }
+
+        .scroll-indicator span {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .scroll-indicator .mouse {
+            width: 25px;
+            height: 40px;
+            border: 2px solid var(--text-muted);
+            border-radius: 15px;
+            position: relative;
+        }
+
+        .scroll-indicator .mouse::before {
+            content: '';
+            position: absolute;
+            top: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 3px;
+            height: 8px;
+            background: var(--accent-blue);
+            border-radius: 3px;
+            animation: scroll 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateX(-50%) translateY(0); }
+            40% { transform: translateX(-50%) translateY(-10px); }
+            60% { transform: translateX(-50%) translateY(-5px); }
+        }
+
+        @keyframes scroll {
+            0% { opacity: 1; top: 8px; }
+            100% { opacity: 0; top: 20px; }
+        }
+
+        /* Features Section */
+        .features {
+            padding: 100px 5%;
+            position: relative;
+            z-index: 1;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        .section-header h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(2rem, 4vw, 3rem);
+            margin-bottom: 1rem;
+        }
+
+        .section-header p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .feature-card {
+            background: linear-gradient(135deg, rgba(26, 26, 62, 0.8), rgba(10, 10, 26, 0.9));
+            border: 1px solid rgba(108, 92, 231, 0.2);
+            border-radius: 20px;
+            padding: 2.5rem;
+            transition: all 0.4s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent-purple), var(--accent-pink));
+            transform: scaleX(0);
+            transition: transform 0.4s ease;
+        }
+
+        .feature-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 50px rgba(108, 92, 231, 0.2);
+            border-color: var(--accent-purple);
+        }
+
+        .feature-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink));
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .feature-card h3 {
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+        }
+
+        .feature-card p {
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        /* Breathing Exercise Section */
+        .breathing-section {
+            padding: 100px 5%;
+            position: relative;
+            z-index: 1;
+        }
+
+        .breathing-container {
+            max-width: 600px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .breathing-circle {
+            width: 250px;
+            height: 250px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
+            margin: 0 auto 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.5s ease;
+            position: relative;
+        }
+
+        .breathing-circle::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 2px solid var(--accent-purple);
+            animation: pulse-ring 2s infinite;
+        }
+
+        @keyframes pulse-ring {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(1.3); opacity: 0; }
+        }
+
+        .breathing-circle.inhale {
+            transform: scale(1.2);
+            box-shadow: 0 0 60px rgba(108, 92, 231, 0.6);
+        }
+
+        .breathing-circle.exhale {
+            transform: scale(1);
+            box-shadow: 0 0 30px rgba(108, 92, 231, 0.3);
+        }
+
+        .breathing-text {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .breathing-instruction {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            margin-top: 1rem;
+        }
+
+        .breathing-stats {
+            display: flex;
+            justify-content: center;
+            gap: 3rem;
+            margin-top: 2rem;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--accent-blue);
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        /* Testimonials */
+        .testimonials {
+            padding: 100px 5%;
+            position: relative;
+            z-index: 1;
+        }
+
+        .testimonials-slider {
+            max-width: 900px;
+            margin: 0 auto;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .testimonial-track {
+            display: flex;
+            transition: transform 0.5s ease;
+        }
+
+        .testimonial-card {
+            min-width: 100%;
+            padding: 3rem;
+            background: linear-gradient(135deg, rgba(26, 26, 62, 0.6), rgba(10, 10, 26, 0.8));
+            border: 1px solid rgba(108, 92, 231, 0.2);
+            border-radius: 20px;
+            text-align: center;
+        }
+
+        .testimonial-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink));
+            margin: 0 auto 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+        }
+
+        .testimonial-text {
+            font-size: 1.2rem;
+            line-height: 1.8;
+            color: var(--text-muted);
+            margin-bottom: 1.5rem;
+            font-style: italic;
+        }
+
+        .testimonial-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .testimonial-role {
+            color: var(--accent-blue);
+            font-size: 0.9rem;
+        }
+
+        .slider-controls {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .slider-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .slider-dot.active {
+            background: var(--accent-purple);
+            transform: scale(1.2);
+        }
+
+        /* CTA Section */
+        .cta-section {
+            padding: 100px 5%;
+            position: relative;
+            z-index: 1;
+        }
+
+        .cta-box {
+            max-width: 900px;
+            margin: 0 auto;
+            background: linear-gradient(135deg, rgba(108, 92, 231, 0.3), rgba(253, 121, 168, 0.2));
+            border: 1px solid var(--accent-purple);
+            border-radius: 30px;
+            padding: 4rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cta-box::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(108, 92, 231, 0.1) 0%, transparent 70%);
+            animation: rotate 20s linear infinite;
+        }
+
+        @keyframes rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .cta-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .cta-box h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(2rem, 4vw, 3rem);
+            margin-bottom: 1rem;
+        }
+
+        .cta-box p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+        }
+
+        .email-form {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .email-input {
+            flex: 1;
+            min-width: 250px;
+            padding: 1rem 1.5rem;
+            border: 2px solid rgba(108, 92, 231, 0.3);
+            border-radius: 50px;
+            background: rgba(10, 10, 26, 0.8);
+            color: var(--text-light);
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+
+        .email-input:focus {
+            border-color: var(--accent-purple);
+        }
+
+        .email-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Footer */
+        footer {
+            padding: 3rem 5%;
+            border-top: 1px solid rgba(108, 92, 231, 0.2);
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .footer-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: var(--accent-purple);
+        }
+
+        .footer-social {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .social-icon {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: rgba(108, 92, 231, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1.2rem;
+        }
+
+        .social-icon:hover {
+            background: var(--accent-purple);
+            transform: translateY(-3px);
+        }
+
+        .copyright {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.6s ease-out;
+        }
+
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Mobile Menu */
+        .mobile-menu-btn {
+            display: none;
+            flex-direction: column;
+            gap: 5px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 5px;
+        }
+
+        .mobile-menu-btn span {
+            width: 25px;
+            height: 2px;
+            background: var(--text-light);
+            transition: all 0.3s ease;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .nav-links, .nav-cta {
+                display: none;
+            }
+
+            .moon {
+                width: 100px;
+                height: 100px;
+                top: 10%;
+                right: 5%;
+            }
+
+            .breathing-circle {
+                width: 200px;
+                height: 200px;
+            }
+
+            .breathing-stats {
+                flex-direction: column;
+                gap: 1.5rem;
+            }
+
+            .cta-box {
+                padding: 2.5rem 1.5rem;
+            }
+        }
+
+        /* Custom Cursor Trail */
+        .cursor-trail {
+            position: fixed;
+            width: 8px;
+            height: 8px;
+            background: var(--accent-purple);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        body:hover .cursor-trail {
+            opacity: 0.6;
+        }
+    </style>
+</head>
+<body>
+    <!-- Stars Background -->
+    <div id="stars-container"></div>
+
+    <!-- Cursor Trail -->
+    <div class="cursor-trail" id="cursorTrail"></div>
+
+    <!-- Navigation -->
+    <nav>
+        <div class="logo">DreamZone</div>
+        <ul class="nav-links">
+            <li><a href="#features">Features</a></li>
+            <li><a href="#breathe">Breathe</a></li>
+            <li><a href="#testimonials">Reviews</a></li>
+            <li><a href="#contact">Contact</a></li>
+        </ul>
+        <button class="nav-cta">Get Started</button>
+        <button class="mobile-menu-btn">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="moon" id="moon">
+            <div class="moon-crater" style="width: 30px; height: 30px; top: 20%; left: 30%;"></div>
+            <div class="moon-crater" style="width: 20px; height: 20px; top: 50%; left: 60%;"></div>
+            <div class="moon-crater" style="width: 15px; height: 15px; top: 70%; left: 25%;"></div>
+        </div>
+        <div class="hero-content">
+            <div class="hero-badge">🌙 #1 Sleep App of 2024</div>
+            <h1>Discover Your Path to <span>Peaceful Sleep</span></h1>
+            <p>Transform your nights with scientifically-backed sleep techniques, calming soundscapes, and personalized sleep tracking. Join millions who've found their path to restful slumber.</p>
+            <div class="hero-buttons">
+                <button class="btn-primary">Start Free Trial</button>
+                <button class="btn-secondary">Watch Demo</button>
+            </div>
+        </div>
+        <div class="scroll-indicator">
+            <span>Scroll to explore</span>
+            <div class="mouse"></div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features" id="features">
+        <div class="section-header fade-in">
+            <h2>Why Choose DreamZone?</h2>
+            <p>Experience the difference with features designed to help you fall asleep faster and wake up refreshed</p>
+        </div>
+        <div class="features-grid">
+            <div class="feature-card fade-in">
+                <div class="feature-icon">🎵</div>
+                <h3>Soothing Soundscapes</h3>
+                <p>Choose from over 100 curated audio experiences including rain, ocean waves, forest ambiance, and white noise mixes.</p>
+            </div>
+            <div class="feature-card fade-in">
+                <div class="feature-icon">🧘</div>
+                <h3>Guided Meditation</h3>
+                <p>Wind down with expert-led relaxation sessions designed to calm your mind and prepare your body for deep sleep.</p>
+            </div>
+            <div class="feature-card fade-in">
+                <div class="feature-icon">📊</div>
+                <h3>Sleep Analytics</h3>
+                <p>Track your sleep patterns with advanced AI technology. Get personalized insights to improve your sleep quality.</p>
+            </div>
+            <div class="feature-card fade-in">
+                <div class="feature-icon">⏰</div>
+                <h3>Smart Wake Up</h3>
+                <p>Wake up gently during your lightest sleep phase. Never feel groggy again with our intelligent alarm system.</p>
+            </div>
+            <div class="feature-card fade-in">
+                <div class="feature-icon">🌡️</div>
+                <h3>Temperature Control</h3>
+                <p>Sync with your smart thermostat to create the perfect sleeping environment automatically each night.</p>
+            </div>
+            <div class="feature-card fade-in">
+                <div class="feature-icon">📱</div>
+                <h3>Offline Mode</h3>
+                <p>Download your favorite sounds and meditations. Perfect sleep companion even without internet connection.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Breathing Exercise Section -->
+    <section class="breathing-section" id="breathe">
+        <div class="breathing-container">
+            <div class="section-header fade-in">
+                <h2>4-7-8 Breathing Exercise</h2>
+                <p>Click the circle and follow the rhythm to calm your nervous system</p>
+            </div>
+            <div class="breathing-circle" id="breathingCircle">
+                <span class="breathing-text" id="breathingText">Click to Start</span>
+            </div>
+            <p class="breathing-instruction" id="breathingInstruction">Inhale for 4 seconds, hold for 7 seconds, exhale for 8 seconds</p>
+            <div class="breathing-stats">
+                <div class="stat">
+                    <div class="stat-value" id="cycleCount">0</div>
+                    <div class="stat-label">Cycles Completed</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="totalTime">0:00</div>
+                    <div class="stat-label">Total Time</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section class="testimonials" id="testimonials">
+        <div class="section-header fade-in">
+            <h2>What Our Users Say</h2>
+            <p>Join thousands of happy sleepers who've transformed their nights</p>
+        </div>
+        <div class="testimonials-slider">
+            <div class="testimonial-track" id="testimonialTrack">
+                <div class="testimonial-card">
+                    <div class="testimonial-avatar">👩</div>
+                    <p class="testimonial-text">"I've struggled with insomnia for years. DreamZone changed everything. Within a week, I was falling asleep in minutes instead of hours. This app is a lifesaver!"</p>
+                    <h4 class="testimonial-name">Sarah Mitchell</h4>
+                    <span class="testimonial-role">Graphic Designer, New York</span>
+                </div>
+                <div class="testimonial-card">
+                    <div class="testimonial-avatar">👨</div>
+                    <p class="testimonial-text">"The sleep tracking feature helped me understand my patterns. Combined with the breathing exercises, I wake up feeling more refreshed than I have in years."</p>
+                    <h4 class="testimonial-name">James Rodriguez</h4>
+                    <span class="testimonial-role">Software Engineer, San Francisco</span>
+                </div>
+                <div class="testimonial-card">
+                    <div class="testimonial-avatar">👩</div>
+                    <p class="testimonial-text">"As a shift worker, sleep is always challenging. DreamZone's smart scheduling and soothing sounds have made daytime sleep actually restful. Highly recommend!"</p>
+                    <h4 class="testimonial-name">Emily Chen</h4>
+                    <span class="testimonial-role">Nurse, Chicago</span>
+                </div>
+            </div>
+            <div class="slider-controls">
+                <div class="slider-dot active" data-index="0"></div>
+                <div class="slider-dot" data-index="1"></div>
+                <div class="slider-dot" data-index="2"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section" id="contact">
+        <div class="cta-box fade-in">
+            <div class="cta-content">
+                <h2>Start Your Journey to Better Sleep</h2>
+                <p>Join over 2 million users who've transformed their sleep. Get 30 days free, no credit card required.</p>
+                <form class="email-form" id="emailForm">
+                    <input type="email" class="email-input" placeholder="Enter your email address" required>
+                    <button type="submit" class="btn-primary">Get Started Free</button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-links">
+            <a href="#">About Us</a>
+            <a href="#">Privacy Policy</a>
+            <a href="#">Terms of Service</a>
+            <a href="#">Support</a>
+            <a href="#">Blog</a>
+        </div>
+        <div class="footer-social">
+            <div class="social-icon">📘</div>
+            <div class="social-icon">🐦</div>
+            <div class="social-icon">📸</div>
+            <div class="social-icon">🎵</div>
+        </div>
+        <p class="copyright">© 2024 DreamZone. All rights reserved. Sweet dreams await.</p>
+    </footer>
+
+    <script>
+        // ========== Stars Background ==========
+        function createStars() {
+            const container = document.getElementById('stars-container');
+            const starCount = 150;
+            
+            for (let i = 0; i < starCount; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.width = Math.random() * 3 + 1 + 'px';
+                star.style.height = star.style.width;
+                star.style.setProperty('--duration', (Math.random() * 3 + 2) + 's');
+                star.style.animationDelay = Math.random() * 3 + 's';
+                
+                star.addEventListener('click', () => {
+                    star.classList.add('clicked');
+                    setTimeout(() => {
+                        star.classList.remove('clicked');
+                    }, 500);
+                });
+                
+                container.appendChild(star);
+            }
+        }
+        createStars();
+
+        // ========== Moon Interaction ==========
+        const moon = document.getElementById('moon');
+        let moonClicked = false;
+
+        moon.addEventListener('click', () => {
+            moonClicked = !moonClicked;
+            if (moonClicked) {
+                moon.style.transform = 'scale(0.9)';
+                setTimeout(() => {
+                    moon.style.transform = 'scale(1.1)';
+                }, 200);
+            }
+        });
+
+        // ========== Breathing Exercise ==========
+        const breathingCircle = document.getElementById('breathingCircle');
+        const breathingText = document.getElementById('breathingText');
+        const breathingInstruction = document.getElementById('breathingInstruction');
+        const cycleCountEl = document.getElementById('cycleCount');
+        const totalTimeEl = document.getElementById('totalTime');
+
+        let breathingActive = false;
+        let breathingInterval;
+        let cycleCount = 0;
+        let startTime;
+        let totalSeconds = 0;
+
+        const breathingPattern = [
+            { phase: 'Inhale', duration: 4000, class: 'inhale' },
+            { phase: 'Hold', duration: 7000, class: 'inhale' },
+            { phase: 'Exhale', duration: 8000, class: 'exhale' }
+        ];
+
+        function startBreathing() {
+            breathingActive = true;
+            startTime = Date.now();
+            runBreathingCycle();
+            updateTotalTime();
+        }
+
+        function runBreathingCycle() {
+            let step = 0;
+            
+            function nextStep() {
+                if (!breathingActive) return;
+                
+                const current = breathingPattern[step];
+                breathingText.textContent = current.phase;
+                breathingCircle.className = 'breathing-circle ' + current.class;
+                
+                // Update instruction
+                if (current.phase === 'Inhale') {
+                    breathingInstruction.textContent = 'Breathe in slowly through your nose...';
+                } else if (current.phase === 'Hold') {
+                    breathingInstruction.textContent = 'Hold your breath gently...';
+                } else {
+                    breathingInstruction.textContent = 'Release slowly through your mouth...';
+                }
+                
+                setTimeout(() => {
+                    step = (step + 1) % 3;
+                    if (step === 0) {
+                        cycleCount++;
+                        cycleCountEl.textContent = cycleCount;
+                    }
+                    nextStep();
+                }, current.duration);
+            }
+            
+            nextStep();
+        }
+
+        function updateTotalTime() {
+            if (!breathingActive) return;
+            
+            totalSeconds = Math.floor((Date.now() - startTime) / 1000);
+            const minutes = Math.floor(totalSeconds / 60);
+            const seconds = totalSeconds % 60;
+            totalTimeEl.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            
+            setTimeout(updateTotalTime, 1000);
+        }
+
+        breathingCircle.addEventListener('click', () => {
+            if (!breathingActive) {
+                startBreathing();
+            } else {
+                breathingActive = false;
+                breathingText.textContent = 'Click to Start';
+                breathingInstruction.textContent = 'Inhale for 4 seconds, hold for 7 seconds, exhale for 8 seconds';
+                breathingCircle.className = 'breathing-circle';
+            }
+        });
+
+        // ========== Testimonials Slider ==========
+        const testimonialTrack = document.getElementById('testimonialTrack');
+        const sliderDots = document.querySelectorAll('.slider-dot');
+        let currentSlide = 0;
+        let autoSlideInterval;
+
+        function goToSlide(index) {
+            currentSlide = index;
+            testimonialTrack.style.transform = `translateX(-${index * 100}%)`;
+            sliderDots.forEach((dot, i) => {
+                dot.classList.toggle('active', i === index);
+            });
+        }
+
+        sliderDots.forEach((dot, index) => {
+            dot.addEventListener('click', () => {
+                goToSlide(index);
+                resetAutoSlide();
+            });
+        });
+
+        function autoSlide() {
+            autoSlideInterval = setInterval(() => {
+                currentSlide = (currentSlide + 1) % 3;
+                goToSlide(currentSlide);
+            }, 5000);
+        }
+
+        function resetAutoSlide() {
+            clearInterval(autoSlideInterval);
+            autoSlide();
+        }
+
+        autoSlide();
+
+        // ========== Scroll Animations ==========
+        const fadeElements = document.querySelectorAll('.fade-in');
+
+        function checkScroll() {
+            fadeElements.forEach(element => {
+                const elementTop = element.getBoundingClientRect().top;
+                const windowHeight = window.innerHeight;
+                
+                if (elementTop < windowHeight - 100) {
+                    element.classList.add('visible');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', checkScroll);
+        window.addEventListener('load', checkScroll);
+
+        // ========== Email Form ==========
+        const emailForm = document.getElementById('emailForm');
+        
+        emailForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = emailForm.querySelector('input').value;
+            
+            // Simulate submission
+            const btn = emailForm.querySelector('button');
+            btn.textContent = 'Sending...';
+            
+            setTimeout(() => {
+                btn.textContent = '✓ Success!';
+                emailForm.querySelector('input').value = '';
+                
+                setTimeout(() => {
+                    btn.textContent = 'Get Started Free';
+                }, 2000);
+            }, 1500);
+        });
+
+        // ========== Custom Cursor Trail ==========
+        const cursorTrail = document.getElementById('cursorTrail');
+        
+        document.addEventListener('mousemove', (e) => {
+            cursorTrail.style.left = e.clientX + 'px';
+            cursorTrail.style.top = e.clientY + 'px';
+        });
+
+        // ========== Smooth Parallax for Stars ==========
+        window.addEventListener('scroll', () => {
+            const scrolled = window.pageYOffset;
+            const stars = document.querySelectorAll('.star');
+            
+            stars.forEach((star, index) => {
+                const speed = 0.1 + (index % 5) * 0.05;
+                star.style.transform = `translateY(${scrolled * speed}px)`;
+            });
+        });
+
+        // ========== Navigation Active State ==========
+        const navLinks = document.querySelectorAll('.nav-links a');
+        
+        window.addEventListener('scroll', () => {
+            let current = '';
+            const sections = document.querySelectorAll('section');
+            
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                const sectionHeight = section.clientHeight;
+                
+                if (pageYOffset >= sectionTop - 200) {
+                    current = section.getAttribute('id');
+                }
+            });
+            
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === `#${current}`) {
+                    link.classList.add('active');
+                }
+            });
+        });
+
+        // ========== Button Ripple Effect ==========
+        document.querySelectorAll('.btn-primary, .btn-secondary, .nav-cta').forEach(button => {
+            button.addEventListener('click', function(e) {
+                const ripple = document.createElement('span');
+                const rect = this.getBoundingClientRect();
+                
+                ripple.style.cssText = `
+                    position: absolute;
+                    background: rgba(255,255,255,0.3);
+                    border-radius: 50%;
+                    transform: scale(0);
+                    animation: ripple 0.6s ease-out;
+                    pointer-events: none;
+                `;
+                
+                const size = Math.max(rect.width, rect.height);
+                ripple.style.width = ripple.style.height = size + 'px';
+                ripple.style.left = e.clientX - rect.left - size / 2 + 'px';
+                ripple.style.top = e.clientY - rect.top - size / 2 + 'px';
+                
+                this.style.position = 'relative';
+                this.style.overflow = 'hidden';
+                this.appendChild(ripple);
+                
+                setTimeout(() => ripple.remove(), 600);
+            });
+        });
+
+        // Add ripple animation keyframes
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes ripple {
+                to {
+                    transform: scale(4);
+                    opacity: 0;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+
+        console.log('🌙 DreamZone Landing Page Loaded Successfully!');
+    </script>
+</body>
+</html>

@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 
 class ProfileController extends Controller
@@ -52,21 +51,49 @@ class ProfileController extends Controller
 
         $user = Auth::user();
 
-        // Delete old avatar file if exists
-        if ($user->avatar && Storage::disk('public')->exists('avatars/' . $user->avatar)) {
-            Storage::disk('public')->delete('avatars/' . $user->avatar);
+        // ── Ensure the avatars directory exists and is writable ──────────
+        $dir = public_path('avatars');
+
+        if (!is_dir($dir)) {
+            if (!mkdir($dir, 0775, true)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Could not create avatars directory. Please create public/avatars/ on your server and set permissions to 775.',
+                ], 500);
+            }
         }
 
+        if (!is_writable($dir)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Avatar directory is not writable. Please chmod public/avatars/ to 775 on your server.',
+            ], 500);
+        }
+
+        // ── Delete old avatar file ────────────────────────────────────────
+        if ($user->avatar) {
+            $oldPath = $dir . DIRECTORY_SEPARATOR . $user->avatar;
+            if (file_exists($oldPath)) {
+                @unlink($oldPath);
+            }
+        }
+
+        // ── Move uploaded file directly into public/avatars/ ─────────────
+        // No storage symlink needed — works on all Hostinger plans
         $file     = $request->file('avatar');
         $filename = $user->id . '_' . time() . '.' . $file->getClientOriginalExtension();
-        $file->storeAs('avatars', $filename, 'public');
+
+        $file->move($dir, $filename);
+
+        // Make sure file is readable by web server
+        @chmod($dir . DIRECTORY_SEPARATOR . $filename, 0644);
 
         $user->update(['avatar' => $filename]);
 
         return response()->json([
             'success'    => true,
             'message'    => 'Avatar updated!',
-            'avatar_url' => asset('storage/avatars/' . $filename),
+            'avatar_url' => avatarUrl($filename) . '?t=' . time(),
         ]);
     }
 
@@ -74,13 +101,22 @@ class ProfileController extends Controller
     {
         $user = Auth::user();
 
-        if ($user->avatar && Storage::disk('public')->exists('avatars/' . $user->avatar)) {
-            Storage::disk('public')->delete('avatars/' . $user->avatar);
+        if ($user->avatar) {
+            $path = public_path('avatars' . DIRECTORY_SEPARATOR . $user->avatar);
+            if (file_exists($path)) {
+                @unlink($path);
+            }
         }
 
         $user->update(['avatar' => null]);
 
-        return response()->json(['success' => true, 'message' => 'Avatar removed.']);
+        // Return the initials avatar URL so the JS can update the img src immediately
+        $user->refresh();
+        return response()->json([
+            'success'    => true,
+            'message'    => 'Avatar removed.',
+            'avatar_url' => $user->avatar_url,
+        ]);
     }
 
     public function updatePassword(Request $request)
@@ -101,13 +137,38 @@ class ProfileController extends Controller
         return response()->json(['success' => true, 'message' => 'Password changed successfully!']);
     }
 
+    /**
+     * Diagnostic — checks if avatar folder is set up correctly
+     * Visit /profile/avatar-check to debug 403 issues
+     */
+    public function avatarCheck()
+    {
+        $dir      = public_path('avatars');
+        $url      = asset('avatars/');
+        $exists   = is_dir($dir);
+        $writable = $exists && is_writable($dir);
+        $perms    = $exists ? substr(sprintf('%o', fileperms($dir)), -4) : 'N/A';
+
+        return response()->json([
+            'dir_path'     => $dir,
+            'public_url'   => $url,
+            'dir_exists'   => $exists,
+            'dir_writable' => $writable,
+            'permissions'  => $perms,
+            'php_user'     => function_exists('posix_getpwuid') ? posix_getpwuid(posix_geteuid())['name'] : 'unknown',
+            'status'       => $writable ? '✅ All good' : ($exists ? '❌ Dir exists but not writable — chmod to 775' : '❌ Dir missing — create public/avatars/'),
+        ]);
+    }
+
     private function getStats(int $userId): array
     {
-        $logs      = \App\Models\WorkLog::where('user_id', $userId);
-        $total     = $logs->count();
-        $dayStarts = (clone $logs)->where('log_type', 'day_start')->count();
-        $dayEnds   = (clone $logs)->where('log_type', 'day_end')->count();
-        $thisMonth = (clone $logs)->whereMonth('log_date', now()->month)->whereYear('log_date', now()->year)->count();
+        $total     = \App\Models\WorkLog::where('user_id', $userId)->count();
+        $dayStarts = \App\Models\WorkLog::where('user_id', $userId)->where('log_type', 'day_start')->count();
+        $dayEnds   = \App\Models\WorkLog::where('user_id', $userId)->where('log_type', 'day_end')->count();
+        $thisMonth = \App\Models\WorkLog::where('user_id', $userId)
+            ->whereMonth('log_date', now()->month)
+            ->whereYear('log_date', now()->year)
+            ->count();
         $member_since = Auth::user()->created_at->format('M Y');
 
         return compact('total', 'dayStarts', 'dayEnds', 'thisMonth', 'member_since');

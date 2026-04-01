@@ -22,10 +22,14 @@ class User extends Authenticatable
     public function getAvatarUrlAttribute(): string
     {
         if ($this->avatar) {
-            return asset('storage/avatars/' . $this->avatar);
+            $filename = basename($this->avatar);
+            if (file_exists(public_path('avatars/' . $filename))) {
+                // Always use /public/avatars/ — confirmed working on this Hostinger setup
+                return avatarUrl($filename);
+            }
         }
 
-        // Each user gets a distinct color — cycles through 12 vivid hues based on their ID
+        // Initials avatar — unique color per user from 12-color palette
         $palette = [
             '6c8fff', // blue
             '43c678', // green
@@ -53,9 +57,7 @@ class User extends Authenticatable
             'fde047', // light yellow
             '818cf8', // indigo
         ];
-
-        $index = ($this->id - 1) % count($palette);
-        $color = $palette[$index];
+        $color = $palette[($this->id - 1) % count($palette)];
         $name  = urlencode($this->name);
 
         return "https://ui-avatars.com/api/?name={$name}&background={$color}&color=fff&size=128&bold=true&font-size=0.4";
